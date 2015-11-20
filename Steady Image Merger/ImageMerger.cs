@@ -168,7 +168,7 @@ namespace Steady_Image_Merger
                         }
                     }
                 }
-                b.Save(folder + "\\frame" + i.ToString().PadLeft(6, '0') + ".bmp");
+                b.Save(folder + "\\frame" + i.ToString().PadLeft(6, '0') + ".bmp", ImageFormat.Bmp);
 
                 if (OnNextStitch != null)
                 {
@@ -205,13 +205,7 @@ namespace Steady_Image_Merger
             {
                 g.DrawImage(original, new Rectangle(adjusted, original.Size), new Rectangle(new Point(0, 0), original.Size), GraphicsUnit.Pixel);
             }
-            // Crop off "hidden pixels" that ffmpeg complains about
-            Bitmap b2 = new Bitmap(original.Width, original.Height);
-            using (Graphics g = Graphics.FromImage(b2))
-            {
-                g.DrawImage(b, new Rectangle(new Point(0, 0), original.Size), new Rectangle(new Point(0, 0), original.Size), GraphicsUnit.Pixel);
-            }
-            return b2;
+            return b;
         }
 
         private static Point GetRelativePosition(BitmapPseudo image1, BitmapPseudo image2)
@@ -239,8 +233,8 @@ namespace Steady_Image_Merger
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
-                        best.X = -x;
-                        best.Y = -y; // = new Point(-x, -y);
+                        best.X = x;
+                        best.Y = y; // = new Point(-x, -y);
                     }
                     //s.Release();
                 }
@@ -253,9 +247,9 @@ namespace Steady_Image_Merger
             //}
 
             //Parallel.ForEach(exes, x =>
-            for (int x = -best.X - refine; x < -best.X + refine; x += 5)
+            for (int x = best.X - refine; x < best.X + refine; x += 6)
             {
-                for (int y = -best.Y - refine; y < -best.Y + refine; y += 5)
+                for (int y = best.Y - refine; y < best.Y + refine; y += 6)
                 {
                     double distance = CalculateDistance(image1, image2, x, y);
 
@@ -263,17 +257,17 @@ namespace Steady_Image_Merger
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
-                        best.X = -x;
-                        best.Y = -y; // = new Point(-x, -y);
+                        best.X = x;
+                        best.Y = y; // = new Point(-x, -y);
                     }
                     //s.Release();
                 }
             }//);
 
-            refine = 5;
-            for (int x = -best.X - refine; x < -best.X + refine; x += 1)
+            refine = 6;
+            for (int x = best.X - refine; x < best.X + refine; x += 1)
             {
-                for (int y = -best.Y - refine; y < -best.Y + refine; y += 1)
+                for (int y = best.Y - refine; y < best.Y + refine; y += 1)
                 {
                     double distance = CalculateDistance(image1, image2, x, y);
 
@@ -327,7 +321,7 @@ namespace Steady_Image_Merger
                             (a.Image[x1, y1][1] - b.Image[x2, y2][1]) * (a.Image[x1, y1][1] - b.Image[x2, y2][1]) +
                             (a.Image[x1, y1][2] - b.Image[x2, y2][2]) * (a.Image[x1, y1][2] - b.Image[x2, y2][2]);
 
-                    count++;
+                    count += 3;
                 }
             }
 
