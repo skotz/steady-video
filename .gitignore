@@ -2,5 +2,7 @@
 *.suo
 *.manifest
 *.7z
+*.mp4
 bin/
 obj/
+test/

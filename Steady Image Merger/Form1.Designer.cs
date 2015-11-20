@@ -32,7 +32,11 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.cbCrop = new System.Windows.Forms.CheckBox();
+            this.cbCenter = new System.Windows.Forms.CheckBox();
+            this.cbFit = new System.Windows.Forms.CheckBox();
+            this.cbOutline = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // button1
@@ -47,14 +51,15 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Multiselect = true;
+            this.openFileDialog1.FileName = "video.mp4";
+            this.openFileDialog1.Filter = "All Files|*.*";
+            this.openFileDialog1.Title = "Select a Video";
             // 
             // progressBar1
             // 
             this.progressBar1.Location = new System.Drawing.Point(93, 12);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(862, 23);
+            this.progressBar1.Size = new System.Drawing.Size(547, 23);
             this.progressBar1.TabIndex = 1;
             // 
             // label1
@@ -67,20 +72,67 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Ready";
             // 
-            // richTextBox1
+            // saveFileDialog1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(12, 54);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(943, 317);
-            this.richTextBox1.TabIndex = 3;
-            this.richTextBox1.Text = "";
+            this.saveFileDialog1.FileName = "finished.avi";
+            this.saveFileDialog1.Filter = "AVI Movies|*.avi";
+            this.saveFileDialog1.Title = "Save Finished Movie As";
+            // 
+            // cbCrop
+            // 
+            this.cbCrop.AutoSize = true;
+            this.cbCrop.Checked = true;
+            this.cbCrop.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbCrop.Location = new System.Drawing.Point(12, 57);
+            this.cbCrop.Name = "cbCrop";
+            this.cbCrop.Size = new System.Drawing.Size(48, 17);
+            this.cbCrop.TabIndex = 3;
+            this.cbCrop.Text = "Crop";
+            this.cbCrop.UseVisualStyleBackColor = true;
+            // 
+            // cbCenter
+            // 
+            this.cbCenter.AutoSize = true;
+            this.cbCenter.Checked = true;
+            this.cbCenter.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbCenter.Location = new System.Drawing.Point(110, 57);
+            this.cbCenter.Name = "cbCenter";
+            this.cbCenter.Size = new System.Drawing.Size(57, 17);
+            this.cbCenter.TabIndex = 4;
+            this.cbCenter.Text = "Center";
+            this.cbCenter.UseVisualStyleBackColor = true;
+            this.cbCenter.CheckedChanged += new System.EventHandler(this.cbCenter_CheckedChanged);
+            // 
+            // cbFit
+            // 
+            this.cbFit.AutoSize = true;
+            this.cbFit.Location = new System.Drawing.Point(66, 57);
+            this.cbFit.Name = "cbFit";
+            this.cbFit.Size = new System.Drawing.Size(38, 17);
+            this.cbFit.TabIndex = 5;
+            this.cbFit.Text = "Fill";
+            this.cbFit.UseVisualStyleBackColor = true;
+            // 
+            // cbOutline
+            // 
+            this.cbOutline.AutoSize = true;
+            this.cbOutline.Location = new System.Drawing.Point(173, 57);
+            this.cbOutline.Name = "cbOutline";
+            this.cbOutline.Size = new System.Drawing.Size(59, 17);
+            this.cbOutline.TabIndex = 6;
+            this.cbOutline.Text = "Outline";
+            this.cbOutline.UseVisualStyleBackColor = true;
+            this.cbOutline.CheckedChanged += new System.EventHandler(this.cbOutline_CheckedChanged);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(967, 383);
-            this.Controls.Add(this.richTextBox1);
+            this.ClientSize = new System.Drawing.Size(652, 86);
+            this.Controls.Add(this.cbOutline);
+            this.Controls.Add(this.cbFit);
+            this.Controls.Add(this.cbCenter);
+            this.Controls.Add(this.cbCrop);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.button1);
@@ -97,7 +149,11 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.CheckBox cbCrop;
+        private System.Windows.Forms.CheckBox cbCenter;
+        private System.Windows.Forms.CheckBox cbFit;
+        private System.Windows.Forms.CheckBox cbOutline;
     }
 }
 

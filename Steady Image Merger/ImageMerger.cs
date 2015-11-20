@@ -21,19 +21,25 @@ namespace Steady_Image_Merger
         public delegate void GetStitchHandler(int num);
         public static event GetStitchHandler OnNextStitch;
 
-        public static void AlignImages(List<string> images, bool crop = false)
+        public static void AlignImages(List<string> images, string folder, bool crop = true, bool centered = true, bool outline = false)
         {
-            //Size final = new Size(1920, 1080);
-            Size final = new Size(480, 360);
+            Size final = new Size(1920, 1080);
+            //Size final = new Size(480, 360);
 
             Bitmap primary = (Bitmap)Bitmap.FromFile(images[0]);
             Point prev = new Point(0, 0);
 
-            //List<BitmapPseudo> pseudo = new List<BitmapPseudo>();
-            //for (int i = 0; i < images.Count; i++)
-            //{
-            //    pseudo.Add(new BitmapPseudo());
-            //}
+            if (Directory.Exists(folder))
+            {
+                Helper.DeleteDirectory(folder);
+            }
+
+            List<BitmapPseudo> pseudo = new List<BitmapPseudo>();
+            for (int i = 0; i < images.Count; i++)
+            {
+                pseudo.Add(new BitmapPseudo());
+            }
+
             //Parallel.For(0, images.Count, i =>
             //{
             //    pseudo[i] = new BitmapPseudo((Bitmap)Bitmap.FromFile(images[i]));
@@ -51,22 +57,42 @@ namespace Steady_Image_Merger
             }
 
             int next = 1;
-            //for (int i = 1; i < images.Count; i++)
-            ParallelOptions po = new ParallelOptions();
-            po.MaxDegreeOfParallelism = 6;
-            Parallel.For(1, images.Count, po, i =>
+            Parallel.For(1, images.Count, i =>
             {
-                // Store previous
-                //beta = alpha;
-                BitmapPseudo betaPseudo = new BitmapPseudo((Bitmap)Bitmap.FromFile(images[i - 1])); // alphaPseudo;
-                Bitmap alpha = (Bitmap)Bitmap.FromFile(images[i]);
-                BitmapPseudo alphaPseudo = new BitmapPseudo(alpha);
+                bool firstPresent = true;
+                bool secondPresent = true;
+                if (pseudo[i].Width == 0)
+                {
+                    firstPresent = false;
+                    pseudo[i] = new BitmapPseudo((Bitmap)Bitmap.FromFile(images[i]));
+                }
+                if (pseudo[i - 1].Width == 0)
+                {
+                    secondPresent = false;
+                    pseudo[i - 1] = new BitmapPseudo((Bitmap)Bitmap.FromFile(images[i - 1]));
+                }
+
+                //BitmapPseudo betaPseudo = new BitmapPseudo((Bitmap)Bitmap.FromFile(images[i - 1]));
+                //BitmapPseudo alphaPseudo = new BitmapPseudo((Bitmap)Bitmap.FromFile(images[i]));
+
+                BitmapPseudo betaPseudo = pseudo[i - 1];
+                BitmapPseudo alphaPseudo = pseudo[i];
 
                 points[i - 1] = GetRelativePosition(betaPseudo, alphaPseudo);
 
                 if (OnNextPoint != null)
                 {
                     OnNextPoint(next++);
+                }
+
+                // We only need each index twice, so if it existed upon starting this iteration we can delete it
+                if (firstPresent)
+                {
+                    pseudo[i] = new BitmapPseudo();
+                }
+                if (secondPresent)
+                {
+                    pseudo[i - 1] = new BitmapPseudo();
                 }
             } );
 
@@ -91,13 +117,20 @@ namespace Steady_Image_Merger
                 }
             }
 
-            if (crop)
+            //if (crop)
+            //{
+            //    CreateNewBitmap(primary, new Rectangle(cropUL.X, cropUL.Y, cropBR.X - cropUL.X, cropBR.Y - cropUL.Y)).Save("0000.png");
+            //}
+            //else
+            //{
+            //    CreateNewBitmap(primary, new Point(0, 0), final).Save("0000.png");
+            //}
+
+            // Not sure (yet) why this was a problem
+            int attempts = 10;
+            while (!Directory.Exists(folder) && attempts-- > 0)
             {
-                CreateNewBitmap(primary, new Rectangle(cropUL.X, cropUL.Y, cropBR.X - cropUL.X, cropBR.Y - cropUL.Y)).Save("0000.png");
-            }
-            else
-            {
-                CreateNewBitmap(primary, new Point(0, 0), final).Save("0000.png");
+                Directory.CreateDirectory(folder);
             }
 
             next = 1;
@@ -106,16 +139,36 @@ namespace Steady_Image_Merger
                 // Store previous
                 Bitmap alpha2 = (Bitmap)Bitmap.FromFile(images[i]);
 
+                Rectangle subImageRec = new Rectangle(-pointsAdjusted[i - 1].X + cropUL.X, -pointsAdjusted[i - 1].Y + cropUL.Y, cropBR.X - cropUL.X, cropBR.Y - cropUL.Y);
+
                 Bitmap b;
-                if (crop)
+                if (centered)
                 {
-                    b = CreateNewBitmap(alpha2, new Rectangle(-pointsAdjusted[i - 1].X + cropUL.X, -pointsAdjusted[i - 1].Y + cropUL.Y, cropBR.X - cropUL.X, cropBR.Y - cropUL.Y));
+                    if (crop)
+                    {
+                        b = CreateNewBitmap(alpha2, subImageRec);
+                    }
+                    else
+                    {
+                        b = CreateNewBitmap(alpha2, pointsAdjusted[i - 1]);
+                    }
                 }
                 else
                 {
-                    b = CreateNewBitmap(alpha2, pointsAdjusted[i - 1], final);
+                    b = alpha2;
+
+                    if (outline)
+                    {
+                        subImageRec.Width = subImageRec.Width - 1;
+                        subImageRec.Height = subImageRec.Height - 1;
+                        
+                        using (Graphics g = Graphics.FromImage(b))
+                        {
+                            g.DrawRectangle(Pens.Red, subImageRec);
+                        }
+                    }
                 }
-                b.Save(i.ToString().PadLeft(4, '0') + ".png");
+                b.Save(folder + "\\frame" + i.ToString().PadLeft(6, '0') + ".bmp");
 
                 if (OnNextStitch != null)
                 {
@@ -145,11 +198,27 @@ namespace Steady_Image_Merger
             return b;
         }
 
+        private static Bitmap CreateNewBitmap(Bitmap original, Point adjusted)
+        {
+            Bitmap b = new Bitmap(original.Width, original.Height);
+            using (Graphics g = Graphics.FromImage(b))
+            {
+                g.DrawImage(original, new Rectangle(adjusted, original.Size), new Rectangle(new Point(0, 0), original.Size), GraphicsUnit.Pixel);
+            }
+            // Crop off "hidden pixels" that ffmpeg complains about
+            Bitmap b2 = new Bitmap(original.Width, original.Height);
+            using (Graphics g = Graphics.FromImage(b2))
+            {
+                g.DrawImage(b, new Rectangle(new Point(0, 0), original.Size), new Rectangle(new Point(0, 0), original.Size), GraphicsUnit.Pixel);
+            }
+            return b2;
+        }
+
         private static Point GetRelativePosition(BitmapPseudo image1, BitmapPseudo image2)
         {
             double bestDistance = double.MaxValue;
             Point best = new Point(0, 0);
-            Semaphore s = new Semaphore(1, 1);
+            //Semaphore s = new Semaphore(1, 1);
 
             int refine = 40;
 
@@ -166,14 +235,14 @@ namespace Steady_Image_Merger
                 {
                     double distance = CalculateDistance(image1, image2, x, y);
 
-                    s.WaitOne();
+                    //s.WaitOne();
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
                         best.X = -x;
                         best.Y = -y; // = new Point(-x, -y);
                     }
-                    s.Release();
+                    //s.Release();
                 }
             }//);
 
@@ -184,38 +253,38 @@ namespace Steady_Image_Merger
             //}
 
             //Parallel.ForEach(exes, x =>
-            for (int x = -best.X - refine; x < -best.X + refine; x += 6)
+            for (int x = -best.X - refine; x < -best.X + refine; x += 5)
             {
-                for (int y = -best.Y - refine; y < -best.Y + refine; y += 6)
+                for (int y = -best.Y - refine; y < -best.Y + refine; y += 5)
                 {
                     double distance = CalculateDistance(image1, image2, x, y);
 
-                    s.WaitOne();
+                    //s.WaitOne();
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
                         best.X = -x;
                         best.Y = -y; // = new Point(-x, -y);
                     }
-                    s.Release();
+                    //s.Release();
                 }
             }//);
 
-            refine = 6;
+            refine = 5;
             for (int x = -best.X - refine; x < -best.X + refine; x += 1)
             {
                 for (int y = -best.Y - refine; y < -best.Y + refine; y += 1)
                 {
                     double distance = CalculateDistance(image1, image2, x, y);
 
-                    s.WaitOne();
+                    //s.WaitOne();
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
                         best.X = -x;
                         best.Y = -y; // = new Point(-x, -y);
                     }
-                    s.Release();
+                    //s.Release();
                 }
             }
 
@@ -245,29 +314,20 @@ namespace Steady_Image_Merger
 
         private static double CalculateDistance(BitmapPseudo a, BitmapPseudo b, int x, int y)
         {
-            double dist = 100000.0;
+            double dist = 0.0;
             double count = 0.0;
-            for (int i = 0; i < a.Width; i += 25)
+            for (int x1 = 0; x1 < a.Width && x1 + x >= 0 && x1 + x < b.Width; x1 += 25)
             {
-                for (int j = 0; j < a.Height; j += 25)
+                for (int y1 = 0; y1 < a.Height && y1 + y >= 0 && y1 + y < b.Height; y1 += 25)
                 {
-                    int x1 = i;
-                    int y1 = j;
-                    if (x1 >= 0 && y1 >= 0 && x1 < a.Width && y1 < a.Height)
-                    {
-                        int x2 = i + x;
-                        int y2 = j + y;
-                        if (x2 >= 0 && y2 >= 0 && x2 < b.Width && y2 < b.Height)
-                        {
-                            //dist += CalculateDistance(a.Image[x1, y1], b.Image[x2, y2]);
+                    int x2 = x1 + x;
+                    int y2 = y1 + y;
 
-                            dist += (a.Image[x1, y1][0] - b.Image[x2, y2][0]) * (a.Image[x1, y1][0] - b.Image[x2, y2][0]) +
-                                    (a.Image[x1, y1][1] - b.Image[x2, y2][1]) * (a.Image[x1, y1][1] - b.Image[x2, y2][1]) +
-                                    (a.Image[x1, y1][2] - b.Image[x2, y2][2]) * (a.Image[x1, y1][2] - b.Image[x2, y2][2]);
+                    dist += (a.Image[x1, y1][0] - b.Image[x2, y2][0]) * (a.Image[x1, y1][0] - b.Image[x2, y2][0]) +
+                            (a.Image[x1, y1][1] - b.Image[x2, y2][1]) * (a.Image[x1, y1][1] - b.Image[x2, y2][1]) +
+                            (a.Image[x1, y1][2] - b.Image[x2, y2][2]) * (a.Image[x1, y1][2] - b.Image[x2, y2][2]);
 
-                            count++;
-                        }
-                    }
+                    count++;
                 }
             }
 
@@ -341,11 +401,11 @@ public struct BitmapPseudo
         int stride = bmData.Stride;
         IntPtr Scan0 = bmData.Scan0;
 
-        int[] hist = new int[image.Width];
-        for (int x = 0; x < image.Width; x++)
-        {
-            hist[x] = 0;
-        }
+        //int[] hist = new int[image.Width];
+        //for (int x = 0; x < image.Width; x++)
+        //{
+        //    hist[x] = 0;
+        //}
 
         unsafe
         {
