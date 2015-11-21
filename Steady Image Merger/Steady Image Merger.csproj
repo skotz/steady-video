@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Helpers.cs" />
     <Compile Include="ImageMerger.cs" />
+    <Compile Include="ImageMergerMode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">

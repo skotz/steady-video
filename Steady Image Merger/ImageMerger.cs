@@ -21,7 +21,7 @@ namespace Steady_Image_Merger
         public delegate void GetStitchHandler(int num);
         public static event GetStitchHandler OnNextStitch;
 
-        public static void AlignImages(List<string> images, string folder, bool crop = true, bool centered = true, bool outline = false)
+        public static void AlignImages(List<string> images, string folder, ImageMergerMode mode)
         {
             Size final = new Size(1920, 1080);
             //Size final = new Size(480, 360);
@@ -89,32 +89,58 @@ namespace Steady_Image_Merger
                 Rectangle subImageRec = new Rectangle(-pointsAdjusted[i - 1].X + cropUL.X, -pointsAdjusted[i - 1].Y + cropUL.Y, cropBR.X - cropUL.X, cropBR.Y - cropUL.Y);
 
                 Bitmap b;
-                if (centered)
+                switch (mode)
                 {
-                    if (crop)
-                    {
-                        b = CreateNewBitmap(alpha2, subImageRec);
-                    }
-                    else
-                    {
-                        b = CreateNewBitmap(alpha2, pointsAdjusted[i - 1]);
-                    }
-                }
-                else
-                {
-                    b = alpha2;
-
-                    if (outline)
-                    {
-                        subImageRec.Width = subImageRec.Width - 1;
-                        subImageRec.Height = subImageRec.Height - 1;
-                        
+                    case ImageMergerMode.Crop:
+                        b = new Bitmap(subImageRec.Width, subImageRec.Height);
                         using (Graphics g = Graphics.FromImage(b))
                         {
-                            g.DrawRectangle(Pens.Red, subImageRec);
+                            g.DrawImage(alpha2, new Rectangle(new Point(0, 0), subImageRec.Size), subImageRec, GraphicsUnit.Pixel);
                         }
-                    }
+                        break;
+                    case ImageMergerMode.Center:
+                        b = new Bitmap(alpha2.Width, alpha2.Height);
+                        using (Graphics g = Graphics.FromImage(b))
+                        {
+                            g.DrawImage(alpha2, new Rectangle(pointsAdjusted[i - 1], alpha2.Size), new Rectangle(new Point(0, 0), alpha2.Size), GraphicsUnit.Pixel);
+                        }
+                        break;
+                    case ImageMergerMode.Outline:
+                        b = alpha2;
+                        subImageRec.Width = subImageRec.Width - 3;
+                        subImageRec.Height = subImageRec.Height - 3;
+                        using (Graphics g = Graphics.FromImage(b))
+                        {
+                            g.DrawRectangle(new Pen(Brushes.Red, 3.0f), subImageRec);
+                        }
+                        break;
+                    case ImageMergerMode.Fill:
+                        b = new Bitmap(alpha2.Width, alpha2.Height);
+                        Bitmap crop = new Bitmap(subImageRec.Width, subImageRec.Height);
+                        using (Graphics g = Graphics.FromImage(crop))
+                        {
+                            g.DrawImage(alpha2, new Rectangle(new Point(0, 0), subImageRec.Size), subImageRec, GraphicsUnit.Pixel);
+                        }
+                        Rectangle source = new Rectangle(0, 0, crop.Width, crop.Height);
+                        double ratio = (double)crop.Width / (double)crop.Height;
+                        int newHeight = alpha2.Height;
+                        int newWidth = (int)(newHeight * ratio);
+                        if (newWidth < alpha2.Width)
+                        {
+                            ratio = (double)crop.Height / (double)crop.Width;
+                            newWidth = alpha2.Width;
+                            newHeight = (int)(newWidth * ratio);
+                        }
+                        Rectangle dest = new Rectangle(alpha2.Width / 2 - newWidth / 2, alpha2.Height / 2 - newHeight / 2, newWidth, newHeight);
+                        using (Graphics g = Graphics.FromImage(b))
+                        {
+                            g.DrawImage(crop, dest, source, GraphicsUnit.Pixel);
+                        }
+                        break;
+                    default:
+                        throw new ArgumentException("ImageMergerMode not specified!");
                 }
+
                 b.Save(folder + "\\frame" + i.ToString().PadLeft(6, '0') + ".bmp", ImageFormat.Bmp);
 
                 if (OnNextStitch != null)
@@ -122,37 +148,6 @@ namespace Steady_Image_Merger
                     OnNextStitch(next++);
                 }
             });
-        }
-
-        private static Bitmap CreateNewBitmap(Bitmap original, Point relative, Size start)
-        {
-            Bitmap b = new Bitmap(start.Width, start.Height);
-            using (Graphics g = Graphics.FromImage(b))
-            {
-                //g.Clear(Color.White);
-                g.DrawImage(original, new Rectangle(relative, original.Size));
-            }
-            return b;
-        }
-
-        private static Bitmap CreateNewBitmap(Bitmap original, Rectangle area)
-        {
-            Bitmap b = new Bitmap(area.Width, area.Height);
-            using (Graphics g = Graphics.FromImage(b))
-            {
-                g.DrawImage(original, new Rectangle(new Point(0, 0), area.Size), area, GraphicsUnit.Pixel);
-            }
-            return b;
-        }
-
-        private static Bitmap CreateNewBitmap(Bitmap original, Point adjusted)
-        {
-            Bitmap b = new Bitmap(original.Width, original.Height);
-            using (Graphics g = Graphics.FromImage(b))
-            {
-                g.DrawImage(original, new Rectangle(adjusted, original.Size), new Rectangle(new Point(0, 0), original.Size), GraphicsUnit.Pixel);
-            }
-            return b;
         }
 
         private static Point GetRelativePosition(Bitmap image1, Bitmap image2)

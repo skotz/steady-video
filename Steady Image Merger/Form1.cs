@@ -14,7 +14,7 @@ namespace Steady_Image_Merger
         private BackgroundWorker worker;
         private Stopwatch sw;
         private string lastStatus;
-        List<string> frames;
+        private List<string> frames;
 
         public Form1()
         {
@@ -51,7 +51,7 @@ namespace Steady_Image_Merger
         private void ReportProgress(int num, string message)
         {
             int percentage = 0;
-            if (frames != null) 
+            if (frames != null)
             {
                 percentage = (int)(((double)num / (double)frames.Count) * 100.0);
             }
@@ -113,13 +113,35 @@ namespace Steady_Image_Merger
 
             frames = Directory.GetFiles("images", "*.bmp").ToList();
 
-            ImageMerger.AlignImages(frames, "processed", cbCrop.Checked, cbCenter.Checked, cbOutline.Checked);
+            ImageMerger.AlignImages(frames, "processed", GetMergeMode());
 
             ReportProgress(99, "Stitching Frames...");
 
             StitchImages(openFileDialog1.FileName);
 
             ReportProgress(100, "Done");
+        }
+
+        private ImageMergerMode GetMergeMode()
+        {
+            ImageMergerMode mode = ImageMergerMode.None;
+            if (rbCenter.Checked)
+            {
+                mode = ImageMergerMode.Center;
+            }
+            if (rbFill.Checked)
+            {
+                mode = ImageMergerMode.Fill;
+            }
+            if (rbOutline.Checked)
+            {
+                mode = ImageMergerMode.Outline;
+            }
+            if (rbCrop.Checked)
+            {
+                mode = ImageMergerMode.Crop;
+            }
+            return mode;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -131,10 +153,10 @@ namespace Steady_Image_Merger
                 if (d2 == System.Windows.Forms.DialogResult.OK)
                 {
                     button1.Enabled = false;
-                    cbCenter.Enabled = false;
-                    cbFit.Enabled = false;
-                    cbCrop.Enabled = false;
-                    cbOutline.Enabled = false;
+                    rbCenter.Enabled = false;
+                    rbFill.Enabled = false;
+                    rbCrop.Enabled = false;
+                    rbOutline.Enabled = false;
                     sw = new Stopwatch();
                     worker.RunWorkerAsync();
                 }
@@ -188,16 +210,6 @@ namespace Steady_Image_Merger
             process.WaitForExit();
 
             File.WriteAllText("images\\done", video + "|" + new FileInfo(video).Length);
-        }
-
-        private void cbCenter_CheckedChanged(object sender, EventArgs e)
-        {
-            cbOutline.Checked = !cbCenter.Checked;
-        }
-
-        private void cbOutline_CheckedChanged(object sender, EventArgs e)
-        {
-            cbCenter.Checked = !cbOutline.Checked;
         }
     }
 

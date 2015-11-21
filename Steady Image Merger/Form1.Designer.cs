@@ -33,10 +33,10 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.cbCrop = new System.Windows.Forms.CheckBox();
-            this.cbCenter = new System.Windows.Forms.CheckBox();
-            this.cbFit = new System.Windows.Forms.CheckBox();
-            this.cbOutline = new System.Windows.Forms.CheckBox();
+            this.rbCrop = new System.Windows.Forms.RadioButton();
+            this.rbFill = new System.Windows.Forms.RadioButton();
+            this.rbOutline = new System.Windows.Forms.RadioButton();
+            this.rbCenter = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
             // 
             // button1
@@ -78,61 +78,57 @@
             this.saveFileDialog1.Filter = "AVI Movies|*.avi";
             this.saveFileDialog1.Title = "Save Finished Movie As";
             // 
-            // cbCrop
+            // rbCrop
             // 
-            this.cbCrop.AutoSize = true;
-            this.cbCrop.Checked = true;
-            this.cbCrop.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbCrop.Location = new System.Drawing.Point(12, 57);
-            this.cbCrop.Name = "cbCrop";
-            this.cbCrop.Size = new System.Drawing.Size(48, 17);
-            this.cbCrop.TabIndex = 3;
-            this.cbCrop.Text = "Crop";
-            this.cbCrop.UseVisualStyleBackColor = true;
+            this.rbCrop.AutoSize = true;
+            this.rbCrop.Location = new System.Drawing.Point(12, 57);
+            this.rbCrop.Name = "rbCrop";
+            this.rbCrop.Size = new System.Drawing.Size(47, 17);
+            this.rbCrop.TabIndex = 7;
+            this.rbCrop.Text = "Crop";
+            this.rbCrop.UseVisualStyleBackColor = true;
             // 
-            // cbCenter
+            // rbFill
             // 
-            this.cbCenter.AutoSize = true;
-            this.cbCenter.Checked = true;
-            this.cbCenter.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbCenter.Location = new System.Drawing.Point(110, 57);
-            this.cbCenter.Name = "cbCenter";
-            this.cbCenter.Size = new System.Drawing.Size(57, 17);
-            this.cbCenter.TabIndex = 4;
-            this.cbCenter.Text = "Center";
-            this.cbCenter.UseVisualStyleBackColor = true;
-            this.cbCenter.CheckedChanged += new System.EventHandler(this.cbCenter_CheckedChanged);
+            this.rbFill.AutoSize = true;
+            this.rbFill.Checked = true;
+            this.rbFill.Location = new System.Drawing.Point(65, 57);
+            this.rbFill.Name = "rbFill";
+            this.rbFill.Size = new System.Drawing.Size(37, 17);
+            this.rbFill.TabIndex = 8;
+            this.rbFill.TabStop = true;
+            this.rbFill.Text = "Fill";
+            this.rbFill.UseVisualStyleBackColor = true;
             // 
-            // cbFit
+            // rbOutline
             // 
-            this.cbFit.AutoSize = true;
-            this.cbFit.Location = new System.Drawing.Point(66, 57);
-            this.cbFit.Name = "cbFit";
-            this.cbFit.Size = new System.Drawing.Size(38, 17);
-            this.cbFit.TabIndex = 5;
-            this.cbFit.Text = "Fill";
-            this.cbFit.UseVisualStyleBackColor = true;
+            this.rbOutline.AutoSize = true;
+            this.rbOutline.Location = new System.Drawing.Point(108, 57);
+            this.rbOutline.Name = "rbOutline";
+            this.rbOutline.Size = new System.Drawing.Size(58, 17);
+            this.rbOutline.TabIndex = 9;
+            this.rbOutline.Text = "Outline";
+            this.rbOutline.UseVisualStyleBackColor = true;
             // 
-            // cbOutline
+            // rbCenter
             // 
-            this.cbOutline.AutoSize = true;
-            this.cbOutline.Location = new System.Drawing.Point(173, 57);
-            this.cbOutline.Name = "cbOutline";
-            this.cbOutline.Size = new System.Drawing.Size(59, 17);
-            this.cbOutline.TabIndex = 6;
-            this.cbOutline.Text = "Outline";
-            this.cbOutline.UseVisualStyleBackColor = true;
-            this.cbOutline.CheckedChanged += new System.EventHandler(this.cbOutline_CheckedChanged);
+            this.rbCenter.AutoSize = true;
+            this.rbCenter.Location = new System.Drawing.Point(172, 57);
+            this.rbCenter.Name = "rbCenter";
+            this.rbCenter.Size = new System.Drawing.Size(56, 17);
+            this.rbCenter.TabIndex = 10;
+            this.rbCenter.Text = "Center";
+            this.rbCenter.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(652, 86);
-            this.Controls.Add(this.cbOutline);
-            this.Controls.Add(this.cbFit);
-            this.Controls.Add(this.cbCenter);
-            this.Controls.Add(this.cbCrop);
+            this.Controls.Add(this.rbCenter);
+            this.Controls.Add(this.rbOutline);
+            this.Controls.Add(this.rbFill);
+            this.Controls.Add(this.rbCrop);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.button1);
@@ -150,10 +146,10 @@
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.CheckBox cbCrop;
-        private System.Windows.Forms.CheckBox cbCenter;
-        private System.Windows.Forms.CheckBox cbFit;
-        private System.Windows.Forms.CheckBox cbOutline;
+        private System.Windows.Forms.RadioButton rbCrop;
+        private System.Windows.Forms.RadioButton rbFill;
+        private System.Windows.Forms.RadioButton rbOutline;
+        private System.Windows.Forms.RadioButton rbCenter;
     }
 }
 
