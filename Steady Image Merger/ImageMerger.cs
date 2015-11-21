@@ -27,8 +27,7 @@ namespace Steady_Image_Merger
             //Size final = new Size(480, 360);
 
             Bitmap primary = (Bitmap)Bitmap.FromFile(images[0]);
-            Point prev = new Point(0, 0);
-
+            
             if (Directory.Exists(folder))
             {
                 Helper.DeleteDirectory(folder);
@@ -43,10 +42,10 @@ namespace Steady_Image_Merger
             int next = 1;
             Parallel.For(1, images.Count, i =>
             {
-                Bitmap betaPseudo = (Bitmap)Bitmap.FromFile(images[i - 1]);
-                Bitmap alphaPseudo = (Bitmap)Bitmap.FromFile(images[i]);
+                Bitmap previousImage = (Bitmap)Bitmap.FromFile(images[i - 1]);
+                Bitmap nextImage = (Bitmap)Bitmap.FromFile(images[i]);
                 
-                points[i - 1] = GetRelativePosition(betaPseudo, alphaPseudo);
+                points[i - 1] = GetRelativePosition(previousImage, nextImage);
 
                 if (OnNextPoint != null)
                 {
@@ -57,17 +56,18 @@ namespace Steady_Image_Merger
             Point cropUL = new Point(0, 0);
             Point cropBR = new Point(primary.Width, primary.Height);
             List<Point> pointsAdjusted = new List<Point>();
+            Point accumulatedOffsets = new Point(0, 0);
 
             for (int i = 1; i < images.Count; i++)
             {
                 Point p = points[i - 1];
-                prev = new Point(prev.X + p.X, prev.Y + p.Y);
-                pointsAdjusted.Add(prev);
+                accumulatedOffsets = new Point(accumulatedOffsets.X + p.X, accumulatedOffsets.Y + p.Y);
+                pointsAdjusted.Add(accumulatedOffsets);
 
-                cropUL.X = Math.Max(cropUL.X, prev.X);
-                cropUL.Y = Math.Max(cropUL.Y, prev.Y);
-                cropBR.X = Math.Min(cropBR.X, prev.X + primary.Width);
-                cropBR.Y = Math.Min(cropBR.Y, prev.Y + primary.Height);
+                cropUL.X = Math.Max(cropUL.X, accumulatedOffsets.X);
+                cropUL.Y = Math.Max(cropUL.Y, accumulatedOffsets.Y);
+                cropBR.X = Math.Min(cropBR.X, accumulatedOffsets.X + primary.Width);
+                cropBR.Y = Math.Min(cropBR.Y, accumulatedOffsets.Y + primary.Height);
 
                 if (OnNextRelative != null)
                 {
@@ -160,13 +160,18 @@ namespace Steady_Image_Merger
             double bestDistance = double.MaxValue;
             Point best = new Point(0, 0);
 
-            int[] refinements = new int[] { 200, 40, 6, 1 };
+            int[] refinements = new int[] { 200, 20, 5, 1 };
             
             for (int r = 0; r < refinements.Length - 1; r++)
             {
-                for (int x = best.X - refinements[r]; x < best.X + refinements[r]; x += refinements[r + 1])
+                int startx = best.X - refinements[r];
+                int endx = best.X + refinements[r];
+                int starty = best.Y - refinements[r];
+                int endy = best.Y + refinements[r];
+
+                for (int x = startx; x < endx; x += refinements[r + 1])
                 {
-                    for (int y = best.Y - refinements[r]; y < best.Y + refinements[r]; y += refinements[r + 1])
+                    for (int y = starty; y < endy; y += refinements[r + 1])
                     {
                         double distance = CalculateDistance(image1, image2, x, y);
 
@@ -203,19 +208,22 @@ namespace Steady_Image_Merger
                 byte* bp = (byte*)(void*)bScan;
                 int aOffset = aStride - a.Width * 3;
                 int bOffset = bStride - b.Width * 3;
-                
-                for (int x1 = 0; x1 < a.Width && x1 + x >= 0 && x1 + x < b.Width; x1 += 25)
+
+                for (int x1 = 0; x1 < a.Width; x1 += 25)
                 {
-                    for (int y1 = 0; y1 < a.Height && y1 + y >= 0 && y1 + y < b.Height; y1 += 25)
+                    for (int y1 = 0; y1 < a.Height; y1 += 25)
                     {
                         int x2 = x1 + x;
                         int y2 = y1 + y;
 
-                        dist += (ap[(x1 * 3) + y1 * aStride] - bp[(x2 * 3) + y2 * bStride]) * (ap[(x1 * 3) + y1 * aStride] - bp[(x2 * 3) + y2 * bStride]) +
-                                (ap[(x1 * 3) + y1 * aStride + 1] - bp[(x2 * 3) + y2 * bStride + 1]) * (ap[(x1 * 3) + y1 * aStride + 1] - bp[(x2 * 3) + y2 * bStride + 1]) +
-                                (ap[(x1 * 3) + y1 * aStride + 2] - bp[(x2 * 3) + y2 * bStride + 2]) * (ap[(x1 * 3) + y1 * aStride + 2] - bp[(x2 * 3) + y2 * bStride + 2]);
+                        if (x2 >= 0 && y2 >= 0 && x2 < b.Width && y2 < b.Height)
+                        {
+                            dist += (ap[(x1 * 3) + y1 * aStride] - bp[(x2 * 3) + y2 * bStride]) * (ap[(x1 * 3) + y1 * aStride] - bp[(x2 * 3) + y2 * bStride]) +
+                                    (ap[(x1 * 3) + y1 * aStride + 1] - bp[(x2 * 3) + y2 * bStride + 1]) * (ap[(x1 * 3) + y1 * aStride + 1] - bp[(x2 * 3) + y2 * bStride + 1]) +
+                                    (ap[(x1 * 3) + y1 * aStride + 2] - bp[(x2 * 3) + y2 * bStride + 2]) * (ap[(x1 * 3) + y1 * aStride + 2] - bp[(x2 * 3) + y2 * bStride + 2]);
 
-                        count += 3;
+                            count += 3;
+                        }
                     }
                 }
             }
